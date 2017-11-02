@@ -73,7 +73,13 @@ export default class AgendaView extends Component {
     // Hide knob button. Default = false
     hideKnob: PropTypes.bool,
     // Month format in calendar title. Formatting values: http://arshaw.com/xdate/#Formatting
-    monthFormat: PropTypes.string
+    monthFormat: PropTypes.string,
+    
+    // Extra height to escape when the calendar view is expanded
+    escapeExtraHeightWhenExpanded: PropTypes.number,
+
+    // Overwrite how to render the reservations
+    renderReservations: PropTypes.func
   };
 
   constructor(props) {
@@ -101,6 +107,7 @@ export default class AgendaView extends Component {
     this.generateMarkings = this.generateMarkings.bind(this);
     this.knobTracker = new VelocityTracker();
     this.state.scrollY.addListener(({value}) => this.knobTracker.add(value));
+    this.renderReservations = this.renderReservations.bind(this);
   }
 
   calendarOffset() {
@@ -135,16 +142,35 @@ export default class AgendaView extends Component {
       this.knob.setNativeProps({style: { opacity: 0.5 }});
     }
   }
-
+  
   onTouchEnd() {
     if (this.knob) {
       this.knob.setNativeProps({style: { opacity: 1 }});
     }
 
-    if (this.headerState === 'touched') {
+    if (this.state.calendarScrollable) {
+      // Enlarge calendarOffset here as a workaround on iOS to force repaint.
+      // Otherwise the month after current one or before current one remains invisible.
+      // The problem is caused by overflow: 'hidden' style, which we need for dragging
+      // to be performant.
+      // Another working solution for this bug would be to set removeClippedSubviews={false}
+      // in CalendarList listView, but that might impact performance when scrolling
+      // month list in expanded CalendarList.
+      // Further info https://github.com/facebook/react-native/issues/1831
+      this.calendar.scrollToDay(this.state.selectedDay, this.calendarOffset() + 1, false);
+
+      // Calendar is in expanded mode, collapse it back
+      this.setState({
+        calendarScrollable: false
+      });
+
+      this.setScrollPadPosition(this.initialScrollPadPosition(), true);
+    } else if (this.headerState === 'touched') {
+      // Calendar is in collapsed mode, expand it
       this.setScrollPadPosition(0, true);
       this.enableCalendarScrolling();
     }
+
     this.headerState = 'idle';
   }
 
@@ -248,8 +274,12 @@ export default class AgendaView extends Component {
       this.props.onDayPress(xdateToData(day));
     }
   }
-
+  
   renderReservations() {
+    if (!!this.props.renderReservations) {
+      return this.props.renderReservations();
+    }
+
     return (
       <ReservationsList
         rowHasChanged={this.props.rowHasChanged}
@@ -327,8 +357,11 @@ export default class AgendaView extends Component {
       { bottom: agendaHeight, transform: [{ translateY: headerTranslate }] },
     ];
 
-    const shouldAllowDragging = !this.props.hideKnob && !this.state.calendarScrollable;
-    const scrollPadPosition = (shouldAllowDragging ? HEADER_HEIGHT  : 0) - KNOB_HEIGHT;
+    const escapeKnobHeight = !this.props.hideKnob ? KNOB_HEIGHT : 0;
+    const escapeExtraHeightWhenExpanded = !!this.props.escapeExtraHeightWhenExpanded ? this.props.escapeExtraHeightWhenExpanded : 0;
+    const scrollPadPosition = !this.state.calendarScrollable ?
+      HEADER_HEIGHT - escapeKnobHeight :
+      this.viewHeight - escapeKnobHeight - escapeExtraHeightWhenExpanded;
 
     const scrollPadStyle = {
       position: 'absolute',
@@ -339,10 +372,10 @@ export default class AgendaView extends Component {
     };
 
     let knob = (<View style={this.styles.knobContainer}/>);
-
+    
     if (!this.props.hideKnob) {
-      const knobView = this.props.renderKnob ? this.props.renderKnob() : (<View style={this.styles.knob}/>);
-      knob = this.state.calendarScrollable ? null : (
+      const knobView = this.props.renderKnob ? this.props.renderKnob(this.state.calendarScrollable) : (<View style={this.styles.knob}/>);
+      knob = (
         <View style={this.styles.knobContainer}>
           <View ref={(c) => this.knob = c}>{knobView}</View>
         </View>
