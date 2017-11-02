@@ -362,7 +362,7 @@ export default class AgendaView extends Component {
     if (!this.props.hideKnob) {
       const knobView = this.props.renderKnob ? this.props.renderKnob(this.state.calendarScrollable) : (<View style={this.styles.knob}/>);
       knob = (
-        <View style={this.styles.knobContainer}>
+        <View style={[this.styles.knobContainer, { bottom: this.state.calendarScrollable ? escapeExtraHeightWhenExpanded : 0 }]}>
           <View ref={(c) => this.knob = c}>{knobView}</View>
         </View>
       );
