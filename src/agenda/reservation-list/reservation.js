@@ -51,20 +51,19 @@ class ReservationListItem extends Component {
   }
 
   render() {
+    const {viewWidth, viewHeight} = this.props;
     const {reservation, date} = this.props.item;
     let content;
     if (reservation) {
       const firstItem = date ? true : false;
-      content = this.props.renderItem(reservation, firstItem);
+      content = this.props.renderItem(reservation, firstItem, viewWidth, viewHeight);
     } else {
-      content = this.props.renderEmptyDate(date);
+      content = this.props.renderEmptyDate(date, viewWidth, viewHeight);
     }
+
     return (
-      <View style={this.styles.container}>
-        {this.renderDate(date, reservation)}
-        <View style={{flex:1}}>
-          {content}
-        </View>
+      <View style={[this.styles.container, { flex: 1 }]}>
+        {content}
       </View>
     );
   }

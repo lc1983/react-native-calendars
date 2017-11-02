@@ -38,7 +38,9 @@ class ReactComp extends Component {
     super(props);
     this.styles = styleConstructor(props.theme);
     this.state = {
-      reservations: []
+      reservations: [],
+      viewWidth: null,
+      viewHeight: null
     };
     this.heights=[];
     this.selectedDay = this.props.selectedDay;
@@ -107,8 +109,9 @@ class ReactComp extends Component {
   }
 
   renderRow({item, index}) {
-    return (
-      <View onLayout={this.onRowLayoutChange.bind(this, index)}>
+    return !!this.state.viewWidth && !!this.state.viewHeight && (
+      <View style={{ width: this.state.viewWidth, height: this.state.viewHeight }}
+        onLayout={this.onRowLayoutChange.bind(this, index)}>
         <Reservation
           item={item}
           renderItem={this.props.renderItem}
@@ -116,6 +119,8 @@ class ReactComp extends Component {
           renderEmptyDate={this.props.renderEmptyDate}
           theme={this.props.theme}
           rowHasChanged={this.props.rowHasChanged}
+          viewWidth={this.state.viewWidth}
+          viewHeight={this.state.viewHeight}
         />
       </View>
     );
@@ -177,6 +182,13 @@ class ReactComp extends Component {
     return {reservations, scrollPosition};
   }
 
+  onLayout(event) {
+    this.setState({
+      viewWidth: event.nativeEvent.layout.width,
+      viewHeight: event.nativeEvent.layout.height
+    });
+  }
+
   render() {
     if (!this.props.reservations || !this.props.reservations[this.props.selectedDay.toString('yyyy-MM-dd')]) {
       return (<ActivityIndicator style={{marginTop: 80}}/>);
@@ -185,6 +197,9 @@ class ReactComp extends Component {
       <FlatList
         ref={(c) => this.list = c}
         style={this.props.style}
+        horizontal={true}
+        enableEmptySections={true}
+        pagingEnabled={true}
         renderItem={this.renderRow.bind(this)}
         data={this.state.reservations}
         onScroll={this.onScroll.bind(this)}
@@ -192,6 +207,7 @@ class ReactComp extends Component {
         scrollEventThrottle={200}
         onMoveShouldSetResponderCapture={() => {this.onListTouch(); return false;}}
         keyExtractor={(item, index) => index}
+        onLayout={this.onLayout.bind(this)}
       />
     );
   }
