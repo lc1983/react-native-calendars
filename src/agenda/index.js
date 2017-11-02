@@ -149,22 +149,8 @@ export default class AgendaView extends Component {
     }
 
     if (this.state.calendarScrollable) {
-      // Enlarge calendarOffset here as a workaround on iOS to force repaint.
-      // Otherwise the month after current one or before current one remains invisible.
-      // The problem is caused by overflow: 'hidden' style, which we need for dragging
-      // to be performant.
-      // Another working solution for this bug would be to set removeClippedSubviews={false}
-      // in CalendarList listView, but that might impact performance when scrolling
-      // month list in expanded CalendarList.
-      // Further info https://github.com/facebook/react-native/issues/1831
-      this.calendar.scrollToDay(this.state.selectedDay, this.calendarOffset() + 1, false);
-
       // Calendar is in expanded mode, collapse it back
-      this.setState({
-        calendarScrollable: false
-      });
-
-      this.setScrollPadPosition(this.initialScrollPadPosition(), true);
+      this._chooseDayFromCalendar(this.state.selectedDay);
     } else if (this.headerState === 'touched') {
       // Calendar is in collapsed mode, expand it
       this.setScrollPadPosition(0, true);
