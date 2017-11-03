@@ -51,7 +51,7 @@ export default class AgendaView extends Component {
     renderEmptyDay: PropTypes.func,
     // specify your item comparison function for increased performance
     rowHasChanged: PropTypes.func,
-    
+
     // Max amount of months allowed to scroll to the past. Default = 50
     pastScrollRange: PropTypes.number,
 
@@ -64,7 +64,7 @@ export default class AgendaView extends Component {
     minDate: PropTypes.any,
     // Maximum date that can be selected, dates after maxDate will be grayed out. Default = undefined
     maxDate: PropTypes.any,
-    
+
     // Collection of dates that have to be marked. Default = items
     markedDates: PropTypes.object,
     // Optional marking type if custom markedDates are provided
@@ -74,12 +74,9 @@ export default class AgendaView extends Component {
     hideKnob: PropTypes.bool,
     // Month format in calendar title. Formatting values: http://arshaw.com/xdate/#Formatting
     monthFormat: PropTypes.string,
-    
-    // Extra height to escape when the calendar view is expanded
-    escapeExtraHeightWhenExpanded: PropTypes.number,
 
-    // Overwrite how to render the reservations
-    renderReservations: PropTypes.func
+    // Extra height to escape when the calendar view is expanded
+    escapeExtraHeightWhenExpanded: PropTypes.number
   };
 
   constructor(props) {
@@ -107,7 +104,6 @@ export default class AgendaView extends Component {
     this.generateMarkings = this.generateMarkings.bind(this);
     this.knobTracker = new VelocityTracker();
     this.state.scrollY.addListener(({value}) => this.knobTracker.add(value));
-    this.renderReservations = this.renderReservations.bind(this);
   }
 
   calendarOffset() {
@@ -142,7 +138,7 @@ export default class AgendaView extends Component {
       this.knob.setNativeProps({style: { opacity: 0.5 }});
     }
   }
-  
+
   onTouchEnd() {
     if (this.knob) {
       this.knob.setNativeProps({style: { opacity: 1 }});
@@ -260,12 +256,8 @@ export default class AgendaView extends Component {
       this.props.onDayPress(xdateToData(day));
     }
   }
-  
-  renderReservations() {
-    if (!!this.props.renderReservations) {
-      return this.props.renderReservations();
-    }
 
+  renderReservations() {
     return (
       <ReservationsList
         rowHasChanged={this.props.rowHasChanged}
@@ -358,7 +350,7 @@ export default class AgendaView extends Component {
     };
 
     let knob = (<View style={this.styles.knobContainer}/>);
-    
+
     if (!this.props.hideKnob) {
       const knobView = this.props.renderKnob ? this.props.renderKnob(this.state.calendarScrollable) : (<View style={this.styles.knob}/>);
       knob = (
